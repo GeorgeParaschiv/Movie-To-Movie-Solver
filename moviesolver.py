@@ -2,6 +2,8 @@ from tmdbv3api import TMDb, Movie, Person
 import requests
 import re
 import datetime
+
+# API Key 
 import config
 
 # Global Variables
@@ -10,48 +12,35 @@ database = Movie()
 person = Person()
 tmdb.api_key = config.api_key
 tmdb.language = 'en'
-source_date = "05 Mar 2022 17:00:00"
+# -----------------------------------------------------------------------
+# Get the Daily Challenge
+def get_daily_challenge():
+    # Grabbing the Daily Challenge from the Website
+    url = 'https://movietomovie.com/bundle.js'
+    response = requests.get(url)
 
-# Grabbing the Daily Challenge from the Website
-url = 'https://movietomovie.com/bundle.js'
+    # Extract the movie information from the JavaScript code using regular expressions
+    regex = r'\[{id:(.*?),title:\"(.*?)\",poster:.*?},{id:(.*?),title:\"(.*?)\",poster:.*?}\]'
+    matches = re.findall(regex, response.text)
 
-response = requests.get(url)
+    # Create a list of dictionaries containing the different daily challenges
+    daily_challenges = []
 
-# Extract the movie information from the JavaScript code using regular expressions
-regex = r'\[{id:(.*?),title:\"(.*?)\",poster:.*?},{id:(.*?),title:\"(.*?)\",poster:.*?}\]'
-matches = re.findall(regex, response.text)
+    # Parsing the daily challenges into a list
+    for match in matches:
+        start = {'id': int(match[0]), 'title': match[1]}
+        end = {'id': int(match[2]), 'title': match[3]}
+        daily_challenges.append([start, end])
 
-# Create a list of dictionaries containing the different daily challenges
-daily_challenges = []
+    # Calculating the challenge index based on days since the source date
+    time = datetime.datetime.strptime("05 Mar 2022 11:00:00", "%d %b %Y %H:%M:%S")
+    days_since = (datetime.datetime.now() - time).days
+    time = days_since % len(daily_challenges)
 
-# Parsing the daily challenges into a list
-for match in matches:
-    start = {'id': int(match[0]), 'title': match[1]}
-    end = {'id': int(match[2]), 'title': match[3]}
-    daily_challenges.append([start, end])
+    # Grab the current daily challenge
+    return daily_challenges[time]
 
-# Calculating the challenge index based on days since the source date
-time = datetime.datetime.strptime(source_date, "%d %b %Y %H:%M:%S")
-days_since = (datetime.datetime.now() - time).days
-time = days_since % len(daily_challenges)
-
-# Grab the current daily challenge
-challenge = daily_challenges[time]
-
-# Initializations
-start_movie = challenge[0]['title']
-start_movie_id = challenge[0]['id']
-
-end_movie = challenge[1]['title']
-end_movie_id = challenge[1]['id']
-
-# Set iteration limit
-limit = 1
-
-# Stores the lines with their corresponding popularities [line[]]
-lines = []
-
-# -----------------------------------------------------------------------   
+# -----------------------------------------------------------------------
 # Grab the cast from a specific movie ID
 def get_cast(movie_id):
     # Store cast in dictionary with {actor_id : actor_name}
@@ -71,59 +60,69 @@ def get_movies(actor_id):
         movies[cred.id] = cred.original_title
     return movies
 
-# ----------------------------------------------------------------------- 
-def printline(line):
-    for step in range(len(line)-1):
-        print("%s -> " %line[step], end = "")
-    print(line[-1])
+# -----------------------------------------------------------------------
+# Print each Line 
+def printchain(chain):
+    for step in range(len(chain)-1):
+        print("%s -> " %chain[step], end = "")
+    print(chain[-1])
 
 # -----------------------------------------------------------------------   
-# Recursively search through the movies until end is reach or limit is reach
-def linefinder(line, list, iterations, movie_flag):
+# Recursively search through the movies until end is reached or limit is reached
+def chainfinder(chain, list, iterations, movie_flag, limit):
     if (movie_flag):
         if (iterations == limit):
             if (end_movie_id in list):
-                new_line = line[:]
-                new_line.append(end_movie)
-                printline(new_line)
-                lines.append(new_line)
+                new_chain = chain[:]
+                new_chain.append(end_movie)
+                printchain(new_chain)
+                chains.append(new_chain)
             return
         else:
             for movie in list:
-                if (list[movie] in line):
+                if (list[movie] in chain):
                     continue
                 else:
-                    new_line = line[:]
-                    new_line.append(list[movie])
+                    new_chain = chain[:]
+                    new_chain.append(list[movie])
                     cast = get_cast(movie)
-                    linefinder(new_line, cast, iterations, False)
+                    chainfinder(new_chain, cast, iterations, False, limit)
     else:
         for actor in list:
-            if (list[actor] in line):
+            if (list[actor] in chain):
                     continue
             else:
-                new_line = line[:]
-                new_line.append(list[actor])
+                new_chain = chain[:]
+                new_chain.append(list[actor])
                 movies = get_movies(actor)
-                linefinder(new_line, movies, iterations+1, True)
+                chainfinder(new_chain, movies, iterations+1, True, limit)
 
 # -----------------------------------------------------------------------
-#            
+# Helper function to find solution chains of a specified length
+def solutions(title, id, limit):
+    print("\nChains of length %i: " %limit)
+    chainfinder([title], get_cast(id), 0, False, limit)
+
+    if (not chains):
+        print("No chains of length %i connecting the movies was found.\n" %limit)
+
+# -----------------------------------------------------------------------
+
+# Initializations
+challenge = get_daily_challenge()
+chains = [] # Global
+
+start_movie = challenge[0]['title']
+start_movie_id = challenge[0]['id']
+
+end_movie = challenge[1]['title']
+end_movie_id = challenge[1]['id']
+
+# Daily Challenge Solutions
 print("\nDaily Challenge: %s -> %s" %(start_movie, end_movie))
 
-# Finding all lines of length 1
-print("\nLines of length 1: ")
-linefinder([start_movie], get_cast(start_movie_id), 0, False)
+# Finding all chains of length 1
+solutions(start_movie, start_movie_id, 1)   
 
-if (not lines):
-    print("No lines of length %i connecting the movies was found.\n" %limit)
-
-limit+=1    
-
-# Finding all lines of length 2
-print("\nLines of length 2: ")
-linefinder([start_movie], get_cast(start_movie_id), 0, False)
-
-if (not lines):
-    print("No lines of length %i connecting the movies was found." %limit)
-
+# Finding all chains of length 2
+solutions(start_movie, start_movie_id, 2)   
