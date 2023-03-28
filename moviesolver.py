@@ -1,4 +1,4 @@
-from tmdbv3api import TMDb, Movie, Person
+from tmdbv3api import TMDb, Movie, Person, Authentication
 import requests
 import re
 import datetime
@@ -12,8 +12,9 @@ database = Movie()
 person = Person()
 tmdb.api_key = config.api_key
 tmdb.language = 'en'
+
 # -----------------------------------------------------------------------
-# Get the Daily Challenge
+""" Get The Daily Challenge """
 def get_daily_challenge():
     # Grabbing the Daily Challenge from the Website
     url = 'https://movietomovie.com/bundle.js'
@@ -33,7 +34,7 @@ def get_daily_challenge():
         daily_challenges.append([start, end])
 
     # Calculating the challenge index based on days since the source date
-    time = datetime.datetime.strptime("05 Mar 2022 11:00:00", "%d %b %Y %H:%M:%S")
+    time = datetime.datetime.strptime("05 Mar 2022 13:00:00", "%d %b %Y %H:%M:%S")
     days_since = (datetime.datetime.now() - time).days
     time = days_since % len(daily_challenges)
 
@@ -41,7 +42,7 @@ def get_daily_challenge():
     return daily_challenges[time]
 
 # -----------------------------------------------------------------------
-# Grab the cast from a specific movie ID
+""" Grab The Cast From A Specific Movie ID """
 def get_cast(movie_id):
     # Store cast in dictionary with {actor_id : actor_name}
     cast = {}
@@ -52,7 +53,7 @@ def get_cast(movie_id):
     return cast
 
 # -----------------------------------------------------------------------   
-# Grab the movies from a specific actor ID
+""" Grab The Movies From A Specific Actor ID """
 def get_movies(actor_id):
     movies = {}
     credits = person.movie_credits(actor_id).cast
@@ -61,36 +62,46 @@ def get_movies(actor_id):
     return movies
 
 # -----------------------------------------------------------------------
-# Print each Line 
+""" Print Each Chain """
 def printchain(chain):
     for step in range(len(chain)-1):
         print("%s -> " %chain[step], end = "")
     print(chain[-1])
 
 # -----------------------------------------------------------------------   
-# Recursively search through the movies until end is reached or limit is reached
+""" Find All Chains Of A Specified Length (Limit) """
 def chainfinder(chain, list, iterations, movie_flag, limit):
+    # If the list is a list of movies:
     if (movie_flag):
+        # If we reach the limit and the end movie is in the list of movies, we have discovered a valid chain
         if (iterations == limit):
             if (end_movie_id in list):
                 new_chain = chain[:]
                 new_chain.append(end_movie)
+                # Print the chain and add it to the list of chains
                 printchain(new_chain)
                 chains.append(new_chain)
+                # Refresh authentication to avoid crashing
+                auth = Authentication(username=config.username, password=config.password) 
             return
+        # If not at the limit recursively call function for list of cast of each movie
         else:
             for movie in list:
-                if (list[movie] in chain):
+                # Discard the chain if we have come across the movie before, or we have reached the end movie before the limit
+                if ((list[movie] in chain) or (movie == end_movie_id)):
                     continue
                 else:
                     new_chain = chain[:]
                     new_chain.append(list[movie])
                     cast = get_cast(movie)
                     chainfinder(new_chain, cast, iterations, False, limit)
+    # If the list is a list of actors:
     else:
         for actor in list:
+            # Discard chain if we have come across the chain before
             if (list[actor] in chain):
                     continue
+            # Recursively call function for list of movies of each actor
             else:
                 new_chain = chain[:]
                 new_chain.append(list[actor])
@@ -98,25 +109,32 @@ def chainfinder(chain, list, iterations, movie_flag, limit):
                 chainfinder(new_chain, movies, iterations+1, True, limit)
 
 # -----------------------------------------------------------------------
-# Helper function to find solution chains of a specified length
+""" Print Headers And Call Chainfinder Algorithm """
 def solutions(title, id, limit):
     print("\nChains of length %i: " %limit)
     chainfinder([title], get_cast(id), 0, False, limit)
 
     if (not chains):
-        print("No chains of length %i connecting the movies was found.\n" %limit)
+        print("No chains of length %i connecting the movies was found." %limit)
 
 # -----------------------------------------------------------------------
+""" Main """
 
 # Initializations
 challenge = get_daily_challenge()
-chains = [] # Global
+chains = [] 
 
-start_movie = challenge[0]['title']
-start_movie_id = challenge[0]['id']
+# start_movie = challenge[0]['title']
+# start_movie_id = challenge[0]['id']
 
-end_movie = challenge[1]['title']
-end_movie_id = challenge[1]['id']
+# end_movie = challenge[1]['title']
+# end_movie_id = challenge[1]['id']
+
+start_movie = "(500) Days of Summer"
+start_movie_id = 19913
+
+end_movie = "The Wolf of Wall Street"
+end_movie_id = 106646
 
 # Daily Challenge Solutions
 print("\nDaily Challenge: %s -> %s" %(start_movie, end_movie))
