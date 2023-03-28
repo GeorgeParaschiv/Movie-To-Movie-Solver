@@ -2,12 +2,13 @@ from tmdbv3api import TMDb, Movie, Person
 import requests
 import re
 import datetime
+import config
 
 # Global Variables
 tmdb = TMDb()
 database = Movie()
 person = Person()
-tmdb.api_key = '116058e715192128c3cba75e7bf446e6'
+tmdb.api_key = config.api_key
 tmdb.language = 'en'
 source_date = "05 Mar 2022 17:00:00"
 
