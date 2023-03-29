@@ -5,4 +5,4 @@ This requires a TMDB API Key in order to function properly. My personal api key 
 
 *WARNING* 
 Chains of length 2 and greater may take multiple minutes to complete.
-Host may clsoe connection randomly for lengths > 2.  
+Host may close connection randomly for lengths > 2.  
