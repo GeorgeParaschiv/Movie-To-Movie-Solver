@@ -2,6 +2,7 @@ from tmdbv3api import TMDb, Movie, Person, Authentication
 import requests
 import re
 import datetime
+import time
 import popularity as p
 
 # API Key 
@@ -13,6 +14,7 @@ database = Movie()
 person = Person()
 tmdb.api_key = config.api_key
 tmdb.language = 'en'
+tmdb.wait_on_rate_limit = "True"
 
 # -----------------------------------------------------------------------
 """ Get The Daily Challenge """
@@ -47,7 +49,10 @@ def get_daily_challenge():
 def get_cast(movie_id):
     # Store cast in dictionary with {actor_id : actor_name}
     cast = {}
-    movie = database.details(movie_id)
+    try:
+        movie = database.details(movie_id)
+    except: 
+        movie = database.details(movie_id)
     actors = movie.casts['cast']
     for actor in actors:
         cast[actor.id] = actor.name
@@ -58,7 +63,11 @@ def get_cast(movie_id):
 def get_movies(actor_id):
     # Store movies in dictionary with {movie_id : movie_name}
     movies = {}
-    credits = person.movie_credits(actor_id).cast
+    try:
+        credits = person.movie_credits(actor_id).cast
+    except:
+        credits = person.movie_credits(actor_id).cast
+
     for cred in credits:
         movies[cred.id] = cred.original_title
     return movies
@@ -80,7 +89,7 @@ def chainfinder(chain, list, iterations, movie_flag, limit):
                 chains.append(new_chain)
 
                 # Refresh authentication to avoid crashing
-                auth = Authentication(username=config.username, password=config.password) 
+                #auth = Authentication(username=config.username, password=config.password) 
             return
         # If not at the limit recursively call function for list of cast of each movie
         else:
@@ -133,24 +142,32 @@ def printchain(chain):
 
 """ Main """
 
-# Initializations
-challenge = get_daily_challenge()
+# Initializing chains
 chains = [] 
 
-start_movie = challenge[0]['title']
-start_movie_id = challenge[0]['id']
+print("Do you want to solve the daily challenge, or make your own custom challenge to solve? (D/C)")
+daily = input()
 
-end_movie = challenge[1]['title']
-end_movie_id = challenge[1]['id']
+# Daily Challenge
+if (daily == 'D'):
+    challenge = get_daily_challenge()
+    start_movie = challenge[0]['title']
+    start_movie_id = challenge[0]['id']
 
-# start_movie = "The Silence of the Lambs"
-# start_movie_id = 274
+    end_movie = challenge[1]['title']
+    end_movie_id = challenge[1]['id']
 
-# end_movie = "Mission: Impossible II"
-# end_movie_id = 955
+    print("\nDaily Challenge: %s -> %s" %(start_movie, end_movie))
 
-# Daily Challenge Solutions
-print("\nDaily Challenge: %s -> %s" %(start_movie, end_movie))
+# Custom Challenge
+elif (daily == 'C'):
+    start_movie = "The Silence of the Lambs"
+    start_movie_id = 274
+
+    end_movie = "Mission: Impossible II"
+    end_movie_id = 955
+
+    print("\nCustom Challenge: %s -> %s" %(start_movie, end_movie))
 
 # Finding all chains of length 1
 solutions((start_movie_id, start_movie), 1)   
