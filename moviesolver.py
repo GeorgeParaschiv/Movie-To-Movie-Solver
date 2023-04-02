@@ -3,7 +3,7 @@ from tmdbv3api.exceptions import TMDbException
 import requests
 import re
 import datetime
-import time
+import textwrap
 import popularity as p
 
 # API Key 
@@ -157,18 +157,58 @@ def printchain(chain):
     print(chain[-1][1])
 
 # -----------------------------------------------------------------------
+""" Search for Custom Challenge Movies """
+def search(start):
+     # Loop until user picks a movie
+    while (True):
+        # Search for the movie
+        print("Search for the %s movie: " %("start" if start else "end"))
+        search  = database.search(input())
 
+        # Print up to 10 options and prompt user to choose
+        for index in range(len(search)):
+            if (index >= 10):
+                break
+            print("\n%i. Name: %s" %(index + 1, search[index].title))
+            wrapper=textwrap.TextWrapper(initial_indent = ('   ' if index != 9 else '    '), 
+                                         subsequent_indent = (('\t' + '     ') if index != 9 else ('\t' + '      ')), 
+                                         width = 120)
+            print(wrapper.fill("Overview: " + ("None" if search[index].overview == "" else search[index].overview)))
+
+        # Search yielded no results
+        if (len(search) == 0):
+            print("\nThe search yielded no options. Press enter to search again.")
+            input()
+            continue
+        # Only one movie option
+        if (len(search) == 1):
+            print("\nThere is only one option. Press enter to select it or 0 to search again:")
+            if (input() == ""):
+                break
+            else:
+                print()
+        # Multiple options
+        else:
+            print("\nPick a movie (1-%i) or 0 to search again:" %(len(search) if len(search) <= 10 else 10))
+            selection  = int(input()) - 1
+            if (selection != -1): 
+                break
+            else:
+                print()
+
+    return search[selection].id, search[selection].title
 """ Main """
 
 # Initializing chains
 chains = [] 
 
-print("Do you want to solve the daily challenge, or make your own custom challenge to solve? (D/C)")
+print("\nDo you want to solve the daily challenge, or make your own custom challenge to solve? (D/C)")
 daily = input()
 
 # Daily Challenge
 if (daily == 'D'):
     challenge = get_daily_challenge()
+
     start_movie = challenge[0]['title']
     start_movie_id = challenge[0]['id']
 
@@ -179,12 +219,11 @@ if (daily == 'D'):
 
 # Custom Challenge
 elif (daily == 'C'):
-    start_movie = "The Silence of the Lambs"
-    start_movie_id = 274
-
-    end_movie = "Mission: Impossible II"
-    end_movie_id = 955
-
+    
+    print()
+    start_movie_id, start_movie = search(True)
+    end_movie_id, end_movie = search(False)
+    
     print("\nCustom Challenge: %s -> %s" %(start_movie, end_movie))
 
 # Finding all chains of length 1
