@@ -1,4 +1,5 @@
-from tmdbv3api import TMDb, Movie, Person, Authentication
+from tmdbv3api import TMDb, Movie, Person
+from tmdbv3api.exceptions import TMDbException
 import requests
 import re
 import datetime
@@ -14,8 +15,8 @@ database = Movie()
 person = Person()
 tmdb.api_key = config.api_key
 tmdb.language = 'en'
-tmdb.wait_on_rate_limit = "True"
-
+fail_counter = 0
+dne_counter = 0
 # -----------------------------------------------------------------------
 """ Get The Daily Challenge """
 def get_daily_challenge():
@@ -49,10 +50,21 @@ def get_daily_challenge():
 def get_cast(movie_id):
     # Store cast in dictionary with {actor_id : actor_name}
     cast = {}
-    try:
-        movie = database.details(movie_id)
-    except: 
-        movie = database.details(movie_id)
+
+    # Handle connection errors or non-existant actors
+    while (True):
+        try:
+            movie = database.details(movie_id)
+        except TMDbException:
+            dne_counter += 1
+            return cast
+        except: 
+            fail_counter += 1
+        else:
+            break
+    
+    movie = database.details(movie_id)
+    
     actors = movie.casts['cast']
     for actor in actors:
         cast[actor.id] = actor.name
@@ -63,10 +75,18 @@ def get_cast(movie_id):
 def get_movies(actor_id):
     # Store movies in dictionary with {movie_id : movie_name}
     movies = {}
-    try:
-        credits = person.movie_credits(actor_id).cast
-    except:
-        credits = person.movie_credits(actor_id).cast
+
+    # Handle connection errors or non-existant actors
+    while (True):
+        try:
+            credits = person.movie_credits(actor_id).cast
+        except TMDbException:
+            dne_counter += 1
+            return movies
+        except: 
+            fail_counter += 1
+        else:
+            break
 
     for cred in credits:
         movies[cred.id] = cred.original_title
@@ -88,8 +108,6 @@ def chainfinder(chain, list, iterations, movie_flag, limit):
                 printchain(new_chain)
                 chains.append(new_chain)
 
-                # Refresh authentication to avoid crashing
-                #auth = Authentication(username=config.username, password=config.password) 
             return
         # If not at the limit recursively call function for list of cast of each movie
         else:
@@ -174,3 +192,6 @@ solutions((start_movie_id, start_movie), 1)
 
 # # Finding all chains of length 2
 solutions((start_movie_id, start_movie), 2) 
+
+print("\nThere were %i actors or movies that did not exist." %dne_counter)
+print("There were %i connection failures." %fail_counter)
