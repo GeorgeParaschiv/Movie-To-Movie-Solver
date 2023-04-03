@@ -58,7 +58,8 @@ def get_cast(movie_id):
         except TMDbException:
             dne_counter += 1
             return cast
-        except: 
+        except:
+            global fail_counter 
             fail_counter += 1
         else:
             break
@@ -83,8 +84,9 @@ def get_movies(actor_id):
         except TMDbException:
             dne_counter += 1
             return movies
-        except: 
-            fail_counter += 1
+        except:
+            global fail_counter
+            fail_counter += 1       
         else:
             break
 
