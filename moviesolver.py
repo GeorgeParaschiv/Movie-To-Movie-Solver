@@ -184,17 +184,16 @@ def search(start):
         if (len(search) == 1):
             print("\nThere is only one option. Press enter to select it or 0 to search again:")
             if (input() == ""):
-                break
+                return search[0].id, search[0].title
             else:
                 print()
         # Multiple options
         else:
             print("\nPick a movie (1-%i) or 0 to search again:" %(len(search) if len(search) <= 10 else 10))
             selection  = int(input()) - 1
+            print()
             if (selection != -1): 
                 break
-            else:
-                print()
 
     return search[selection].id, search[selection].title
 """ Main """
