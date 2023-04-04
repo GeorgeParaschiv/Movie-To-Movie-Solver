@@ -4,6 +4,7 @@ import requests
 import re
 import datetime
 import textwrap
+import os
 import popularity as p
 
 # API Key 
@@ -137,19 +138,33 @@ def chainfinder(chain, list, iterations, movie_flag, limit):
 
 # -----------------------------------------------------------------------
 """ Print Headers And Call Chainfinder Algorithm """
-def solutions(id_name, limit):
+def solutions(id_name, limit, file):
+
     # Clear chains and print header
     chains.clear()
     print("\nChains of length %i: " %limit)
 
+    # Write header to file
+    file.write("\nChains of length %i: \n" %limit)
+
     # Find and print all possible chains
     chainfinder([id_name], get_cast(id_name[0]), 0, False, limit)
 
-    # If no chains found print error message, otherwise reprint chains sorted by popularity
+    # If no chains found print error message
     if (not chains):
         print("No chains of length %i connecting the movies was found." %limit)
+        file.write("No chains of length %i connecting the movies was found.\n" %limit)
     else:
-        p.popularity(chains)
+        # Write each line to the file
+        for chain in chains:
+            file.write("%i. " %(chains.index(chain) + 1))
+            for step in range(len(chain)-1):
+                file.write("%s -> " %chain[step][1])
+            file.write(chain[-1][1])
+            file.write("\n")
+
+        # Reprint chain sorted by populairty    
+        p.popularity(chains, file)
 
 # -----------------------------------------------------------------------
 """ Print Each Chain """
@@ -198,6 +213,8 @@ def search(start):
                 break
 
     return search[selection].id, search[selection].title
+
+# -----------------------------------------------------------------------
 """ Main """
 
 # Initializing chains
@@ -215,6 +232,10 @@ if (daily == 'D'):
 
     end_movie = challenge[1]['title']
     end_movie_id = challenge[1]['id']
+    
+    # Open the text file
+    file = open((os.getcwd() + "\Logs\\Daily Challenges\\" + start_movie.replace(":", "") + " - " + end_movie.replace(":", "") + ".txt"), 'w', encoding='utf-8')
+    file.write("Daily Challenge: %s -> %s\n" %(start_movie, end_movie))
 
     print("\nDaily Challenge: %s -> %s" %(start_movie, end_movie))
 
@@ -224,14 +245,21 @@ elif (daily == 'C'):
     print()
     start_movie_id, start_movie = search(True)
     end_movie_id, end_movie = search(False)
+
+    # Open the text file
+    file = open((os.getcwd() + "\Logs\\Custom Challenges\\" + start_movie.replace(":", "") + " - " + end_movie.replace(":", "") + ".txt"), 'w', encoding = 'utf-8')
+    file.write("Custom Challenge: %s -> %s\n" %(start_movie, end_movie))
     
-    print("\nCustom Challenge: %s -> %s" %(start_movie, end_movie))
+    print("Custom Challenge: %s -> %s" %(start_movie, end_movie))
 
 # Finding all chains of length 1
-solutions((start_movie_id, start_movie), 1)   
+solutions((start_movie_id, start_movie), 1, file) 
 
-# # Finding all chains of length 2
-solutions((start_movie_id, start_movie), 2) 
+# Finding all chains of length 2
+solutions((start_movie_id, start_movie), 2, file)
+
+# Close the file
+file.close() 
 
 print("\nThere were %i actors or movies that did not exist." %dne_counter)
-print("There were %i connection failures." %fail_counter)
+print("There %s %i connection failures." %("was" if fail_counter == 1 else "were", fail_counter))
