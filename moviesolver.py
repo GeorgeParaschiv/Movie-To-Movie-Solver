@@ -146,14 +146,17 @@ def solutions(id_name, limit, file):
 
     # Write header to file
     file.write("\nChains of length %i: \n" %limit)
-
+    start_time = datetime.datetime.now()
     # Find and print all possible chains
     chainfinder([id_name], get_cast(id_name[0]), 0, False, limit)
+    end_time = datetime.datetime.now()
 
     # If no chains found print error message
     if (not chains):
         print("No chains of length %i connecting the movies was found." %limit)
         file.write("No chains of length %i connecting the movies was found.\n" %limit)
+        file.write(f"\nTime Elapsed: {end_time-start_time}\n")
+        print(f"\nTime Elapsed: {end_time-start_time}")
     else:
         # Write each line to the file
         for chain in chains:
@@ -162,6 +165,9 @@ def solutions(id_name, limit, file):
                 file.write("%s -> " %chain[step][1])
             file.write(chain[-1][1])
             file.write("\n")
+
+        print(f"\nTime Elapsed: {end_time-start_time}")
+        file.write(f"\nTime Elapsed: {end_time-start_time}\n")
 
         # Reprint chain sorted by populairty    
         p.popularity(chains, file)
@@ -200,10 +206,10 @@ def search(start):
         # Only one movie option
         if (len(search) == 1):
             print("\nThere is only one option. Press enter to select it or 0 to search again:")
-            if (input() == ""):
-                return search[0].id, search[0].title
-            else:
+            if (input() != "0"):
                 print()
+                return search[0].id, search[0].title
+            print()
         # Multiple options
         else:
             print("\nPick a movie (1-%i) or 0 to search again:" %(len(search) if len(search) <= 10 else 10))
