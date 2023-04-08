@@ -197,41 +197,72 @@ def printchain(chain, reverse):
 """ Search for Custom Challenge Movies """
 def search(start):
      # Loop until user picks a movie
+    initial = 0
+    cycle = []
+    space = False
     while (True):
+    
         # Search for the movie
-        print("Search for the %s movie: " %("start" if start else "end"))
-        search  = database.search(input())
+        if (not cycle):
+            print("Search for the %s movie: " %("start" if start else "end"))
+            string = input()
+            search  = database.search(string)
+        else:
+            search = cycle
 
         # Print up to 10 options and prompt user to choose
-        for index in range(len(search)):
-            if (index >= 10):
+        if (initial >= len(search)):
+            initial = 0
+        for index in range(initial, initial + 5):
+            if (index >= len(search)):
                 break
-            print("\n%i. Name: %s (%s)" %(index + 1, search[index].title, search[index].release_date[0:4]))
-            wrapper=textwrap.TextWrapper(initial_indent = ('   ' if index != 9 else '    '), 
-                                         subsequent_indent = (('\t' + '     ') if index != 9 else ('\t' + '      ')), 
+            
+            print("%s%i. Name: %s (%s)" %("" if space else "\n", index + 1, search[index].title, search[index].release_date[0:4]))
+            wrapper=textwrap.TextWrapper(initial_indent = ('   ' if index < 9 else '    '), 
+                                         subsequent_indent = (('\t' + '     ') if index < 9 else ('\t' + '      ')), 
                                          width = 120)
             print(wrapper.fill("Overview: " + ("None" if search[index].overview == "" else search[index].overview)))
+            space = False
 
         # Search yielded no results
         if (len(search) == 0):
-            print("\nThe search yielded no options. Press enter to search again.")
-            input()
+            if (string != ""):
+                print()
+            print("The search yielded no options. Press enter to search again.")
+            if (input() != ""):
+                print()
             continue
         # Only one movie option
         if (len(search) == 1):
             print("\nThere is only one option. Press enter to select it or 0 to search again:")
-            if (input() != "0"):
+            string = input()
+            if (string != "0"):
+                if (string != ""):
+                    print()
                 return (search[0].id, search[0].original_title, search[0].popularity)
             print()
         # Multiple options
         else:
-            print("\nPick a movie (1-%i) or 0 to search again:" %(len(search) if len(search) <= 10 else 10))
-            selection  = int(input()) - 1
-            print()
-            if (selection != -1): 
-                break
-
-    return (search[selection].id, search[selection].original_title, search[selection].popularity)
+            upper_limit = initial + 5 if initial + 5 <= len(search) else len(search)
+            print("\nPick a movie (%i-%i), press enter to see more results, or 0 to search again:" %(initial+1, upper_limit))
+            selection = input()
+            if (selection == ""):
+                initial += 5
+                cycle = search
+                space = True
+            elif (not selection.isnumeric()):
+                initial+=5
+                cycle = search
+            else:
+                print()
+                selection = int(selection) - 1
+                if (selection != -1 and selection < upper_limit and selection > initial): 
+                    return (search[selection].id, search[selection].original_title, search[selection].popularity)
+                elif (selection == -1):
+                    cycle = []
+                elif (selection >= upper_limit or selection <= initial):
+                    initial += 5
+                    cycle = search
 
 # -----------------------------------------------------------------------
 """ Main """
