@@ -49,8 +49,8 @@ def get_daily_challenge():
 # -----------------------------------------------------------------------
 """ Grab The Cast From A Specific Movie ID """
 def get_cast(movie_id):
-    # Store cast in dictionary with {actor_id : actor_name}
-    cast = {}
+    # Store cast in list of tuples (actor_id, actor_name, actor_popularity)
+    cast = []
 
     # Handle connection errors or non-existant actors
     while (True):
@@ -64,19 +64,17 @@ def get_cast(movie_id):
             fail_counter += 1
         else:
             break
-    
-    movie = database.details(movie_id)
-    
+     
     actors = movie.casts['cast']
     for actor in actors:
-        cast[actor.id] = actor.name
+        cast.append((actor.id, actor.name, actor.popularity))
     return cast
 
 # -----------------------------------------------------------------------   
 """ Grab The Movies From A Specific Actor ID """
 def get_movies(actor_id):
-    # Store movies in dictionary with {movie_id : movie_name}
-    movies = {}
+    # Store movies in list of tuples (movie_id, movie_name, movie_popularity)
+    movies = []
 
     # Handle connection errors or non-existant actors
     while (True):
@@ -91,8 +89,11 @@ def get_movies(actor_id):
         else:
             break
 
-    for cred in credits:
-        movies[cred.id] = cred.original_title
+    for movie in credits:
+        try:
+            movies.append((movie.id, movie.original_title, movie.popularity))
+        except:
+            movies.append((movie.id, movie.original_title, 0))
     return movies
 
 # -----------------------------------------------------------------------   
@@ -102,43 +103,44 @@ def chainfinder(chain, list, iterations, movie_flag, limit):
     if (movie_flag):
         # If we reach the limit and the end movie is in the list of movies, we have discovered a valid chain
         if (iterations == limit):
-            if (end_movie_id in list):
-                new_chain = chain[:]
-                new_chain.append((end_movie_id, end_movie))
+            if (any(end_movie[0] in movie for movie in list)):
+                new_chain = chain.copy()
+                new_chain.append(end_movie)
 
                 # Print the chain and add it to the list of chains
                 print("%i. " %(len(chains) + 1), end = "")
                 printchain(new_chain)
                 chains.append(new_chain)
-
             return
         # If not at the limit recursively call function for list of cast of each movie
         else:
             for movie in list:
                 # Discard the chain if we have come across the movie before, or we have reached the end movie before the limit
-                if (any(movie in item for item in chain) or (movie == end_movie_id)):
+                if (movie[0] == start_movie[0]) or (movie[0] == end_movie[0]):
                     continue
                 else:
-                    new_chain = chain[:]
-                    new_chain.append((movie, list[movie]))
-                    cast = get_cast(movie)
+                    new_chain = chain.copy()
+                    new_chain.append(movie)
+                    cast = get_cast(movie[0])
                     chainfinder(new_chain, cast, iterations, False, limit)
     # If the list is a list of actors:
     else:
         for actor in list:
             # Discard chain if we have come across the actor before
-            if (any(actor in item for item in chain)):
+            if (limit == 2 and iterations == 1):
+                if (chain[1][0] == actor[0]):
                     continue
             # Recursively call function for list of movies of each actor
-            else:
-                new_chain = chain[:]
-                new_chain.append((actor, list[actor]))
-                movies = get_movies(actor)
-                chainfinder(new_chain, movies, iterations+1, True, limit)
+            
+            new_chain = chain.copy()
+            new_chain.append(actor)
+            movies = get_movies(actor[0])
+            chainfinder(new_chain, movies, iterations+1, True, limit)
 
 # -----------------------------------------------------------------------
+
 """ Print Headers And Call Chainfinder Algorithm """
-def solutions(id_name, limit, file):
+def solutions(start_movie, limit, file):
 
     # Clear chains and print header
     chains.clear()
@@ -147,16 +149,14 @@ def solutions(id_name, limit, file):
     # Write header to file
     file.write("\nChains of length %i: \n" %limit)
     start_time = datetime.datetime.now()
+
     # Find and print all possible chains
-    chainfinder([id_name], get_cast(id_name[0]), 0, False, limit)
-    end_time = datetime.datetime.now()
+    chainfinder([start_movie], get_cast(start_movie[0]), 0, False, limit)
 
     # If no chains found print error message
     if (not chains):
         print("No chains of length %i connecting the movies was found." %limit)
         file.write("No chains of length %i connecting the movies was found.\n" %limit)
-        file.write(f"\nTime Elapsed: {end_time-start_time}\n")
-        print(f"\nTime Elapsed: {end_time-start_time}")
     else:
         # Write each line to the file
         for chain in chains:
@@ -166,11 +166,13 @@ def solutions(id_name, limit, file):
             file.write(chain[-1][1])
             file.write("\n")
 
-        print(f"\nTime Elapsed: {end_time-start_time}")
-        file.write(f"\nTime Elapsed: {end_time-start_time}\n")
-
         # Reprint chain sorted by populairty    
         p.popularity(chains, file)
+    
+    end_time = datetime.datetime.now()
+
+    file.write(f"\nTime Elapsed: {end_time-start_time}\n")
+    print(f"\nTime Elapsed: {end_time-start_time}")
 
 # -----------------------------------------------------------------------
 """ Print Each Chain """
@@ -207,8 +209,7 @@ def search(start):
         if (len(search) == 1):
             print("\nThere is only one option. Press enter to select it or 0 to search again:")
             if (input() != "0"):
-                print()
-                return search[0].id, search[0].title
+                return (search[0].id, search[0].original_title, search[0].popularity)
             print()
         # Multiple options
         else:
@@ -218,7 +219,7 @@ def search(start):
             if (selection != -1): 
                 break
 
-    return search[selection].id, search[selection].title
+    return (search[selection].id, search[selection].original_title, search[selection].popularity)
 
 # -----------------------------------------------------------------------
 """ Main """
@@ -233,36 +234,36 @@ daily = input()
 if (daily == 'D'):
     challenge = get_daily_challenge()
 
-    start_movie = challenge[0]['title']
-    start_movie_id = challenge[0]['id']
-
-    end_movie = challenge[1]['title']
-    end_movie_id = challenge[1]['id']
+    # Start and End Movies
+    start_movie = (challenge[0].id, challenge[0].title, database.details(challenge[0].id).popularity)
+    end_movie = (challenge[1].id, challenge[1].title, database.details(challenge[1].id).popularity)   
     
     # Open the text file
-    file = open((os.getcwd() + "\Logs\\Daily Challenges\\" + start_movie.replace(":", "") + " - " + end_movie.replace(":", "") + ".txt"), 'w', encoding='utf-8')
-    file.write("Daily Challenge: %s -> %s\n" %(start_movie, end_movie))
+    file = open((os.getcwd() + "\\Logs\\Daily Challenges\\" + start_movie[1].replace(":", "") + " - " + end_movie[1].replace(":", "") + ".txt"), 'w', encoding='utf-8')
+    file.write("Daily Challenge: %s -> %s\n" %(start_movie[1], end_movie[1]))
 
-    print("\nDaily Challenge: %s -> %s" %(start_movie, end_movie))
+    print("\nDaily Challenge: %s -> %s" %(start_movie[1], end_movie[1]))
 
 # Custom Challenge
 elif (daily == 'C'):
     
     print()
-    start_movie_id, start_movie = search(True)
-    end_movie_id, end_movie = search(False)
+    
+    # Search for the start and end movies
+    start_movie = search(True)
+    end_movie = search(False)
 
     # Open the text file
-    file = open((os.getcwd() + "\Logs\\Custom Challenges\\" + start_movie.replace(":", "") + " - " + end_movie.replace(":", "") + ".txt"), 'w', encoding = 'utf-8')
-    file.write("Custom Challenge: %s -> %s\n" %(start_movie, end_movie))
+    file = open((os.getcwd() + "\\Logs\\Custom Challenges\\" + start_movie[1].replace(":", "") + " - " + end_movie[1].replace(":", "") + ".txt"), 'w', encoding = 'utf-8')
+    file.write("Custom Challenge: %s -> %s\n" %(start_movie[1], end_movie[1]))
     
-    print("Custom Challenge: %s -> %s" %(start_movie, end_movie))
+    print("Custom Challenge: %s -> %s" %(start_movie[1], end_movie[1]))
 
 # Finding all chains of length 1
-solutions((start_movie_id, start_movie), 1, file) 
+solutions(start_movie, 1, file) 
 
 # Finding all chains of length 2
-solutions((start_movie_id, start_movie), 2, file)
+solutions(start_movie, 2, file)
 
 # Close the file
 file.close() 
