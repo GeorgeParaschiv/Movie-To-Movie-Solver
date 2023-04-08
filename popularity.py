@@ -6,7 +6,7 @@ person = Person()
 
 # -----------------------------------------------------------------------
 """ Print List In Order of Popularity """
-def popularity(chains, file):
+def popularity(chains, file, reverse):
 
     new_chains = []
 
@@ -35,28 +35,38 @@ def popularity(chains, file):
         file.write("%i. " %(item+1))
 
         # Print each chain
-        for step in range(len(new_chains[item][0])-1):
-            file.write("%s -> " % new_chains[item][0][step][1])
-        file.write(new_chains[item][0][-1][1])
+        if reverse:
+            for step in range(len(new_chains[item][0])-1, 0, -1):
+                file.write("%s -> " % new_chains[item][0][step][1])
+            file.write(new_chains[item][0][0][1]) 
+        else:
+            for step in range(len(new_chains[item][0])-1):
+                file.write("%s -> " % new_chains[item][0][step][1])
+            file.write(new_chains[item][0][-1][1])            
 
         # Print popularity of each chain
-        file.write(" | Popularity: %.2f\n" %new_chains[item][1])
+        file.write(" | Popularity: %.3f\n" %new_chains[item][1])
 
     # Print chains sorted by popularity
-    printpop(new_chains)
+    printpop(new_chains, reverse)
 
 # -----------------------------------------------------------------------
 """ Print All Chains By Popularity """
-def printpop(new_chains):
+def printpop(new_chains, reverse):
     print("\nChains sorted by popularity: ")
     for item in range(len(new_chains)):
         # Print list number
         print("%i. " %(item+1), end = "")
 
         # Print each chain
-        for step in range(len(new_chains[item][0])-1):
-            print("%s -> " % new_chains[item][0][step][1], end = "")
-        print(new_chains[item][0][-1][1], end = "")
+        if reverse:
+            for step in range(len(new_chains[item][0])-1, 0, -1):
+                print("%s -> " % new_chains[item][0][step][1], end = "")
+            print(new_chains[item][0][0][1], end = "")
+        else:
+            for step in range(len(new_chains[item][0])-1):
+                print("%s -> " % new_chains[item][0][step][1], end = "")
+            print(new_chains[item][0][-1][1], end = "")
 
         # Print popularity of each chain
         print(" | Popularity: %.2f" %new_chains[item][1])
