@@ -256,7 +256,7 @@ def search(start):
             else:
                 print()
                 selection = int(selection) - 1
-                if (selection != -1 and selection < upper_limit and selection > initial): 
+                if (selection != -1 and selection < upper_limit and selection >= initial): 
                     return (search[selection].id, search[selection].original_title, search[selection].popularity)
                 elif (selection == -1):
                     cycle = []
