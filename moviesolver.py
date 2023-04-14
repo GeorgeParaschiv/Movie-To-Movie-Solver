@@ -6,6 +6,7 @@ import datetime
 import textwrap
 import os
 import popularity as p
+import sys
 
 # API Key 
 import config
@@ -270,8 +271,11 @@ def search(start):
 # Initializing chains
 chains = [] 
 
-print("\nDo you want to solve the daily challenge, or make your own custom challenge to solve? (D/C)")
-daily = input()
+if (len(sys.argv) == 1):
+    print("\nDo you want to solve the daily challenge, or make your own custom challenge to solve? (D/C)")
+    daily = input()
+else:
+    daily = sys.argv[1]
 
 # Daily Challenge
 if (daily == 'D'):
