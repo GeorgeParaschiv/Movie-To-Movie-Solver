@@ -201,6 +201,7 @@ def search(start):
     initial = 0
     cycle = []
     space = False
+
     while (True):
     
         # Search for the movie
@@ -261,6 +262,7 @@ def search(start):
                     return (search[selection].id, search[selection].original_title, search[selection].popularity)
                 elif (selection == -1):
                     cycle = []
+                    initial = 0
                 elif (selection >= upper_limit or selection <= initial):
                     initial += 5
                     cycle = search
