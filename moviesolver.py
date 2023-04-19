@@ -58,6 +58,7 @@ def get_cast(movie_id):
         try:
             movie = database.details(movie_id)
         except TMDbException:
+            global dne_counter
             dne_counter += 1
             return cast
         except:
@@ -82,6 +83,7 @@ def get_movies(actor_id):
         try:
             credits = person.movie_credits(actor_id).cast
         except TMDbException:
+            global dne_counter
             dne_counter += 1
             return movies
         except:
