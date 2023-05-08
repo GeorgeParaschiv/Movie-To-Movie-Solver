@@ -27,7 +27,7 @@ def get_daily_challenge():
     response = requests.get(url)
 
     # Extract the movie information from the JavaScript code using regular expressions
-    regex = r'\[{id:(.*?),title:\"(.*?)\",poster:.*?},{id:(.*?),title:\"(.*?)\",poster:.*?}\]'
+    regex = r'{start:{id:(.*?),title:\"(.*?)\",poster:.*?},end:{id:(.*?),title:\"(.*?)\",poster:.*?},shortest_path:{score:.*?}}'
     matches = re.findall(regex, response.text)
 
     # Create a list of dictionaries containing the different daily challenges
