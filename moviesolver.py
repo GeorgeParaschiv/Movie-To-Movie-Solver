@@ -27,7 +27,7 @@ def get_daily_challenge():
     response = requests.get(url)
 
     # Extract the movie information from the JavaScript code using regular expressions
-    regex = r'{start:{id:(.*?),title:\"(.*?)\",poster:.*?},end:{id:(.*?),title:\"(.*?)\",poster:.*?},shortest_path:{score:.*?}}'
+    regex = r'{start:{id:(.*?),title:\"(.*?)\",poster:.*?},end:{id:(.*?),title:\"(.*?)\",poster:.*?},shortest_path:{path:\[.*?\],score:.*?}}'
     matches = re.findall(regex, response.text)
 
     # Create a list of dictionaries containing the different daily challenges
@@ -40,7 +40,7 @@ def get_daily_challenge():
         daily_challenges.append([start, end])
 
     # Calculating the challenge index based on days since the source date
-    time = datetime.datetime.strptime("04 Mar 2022 13:00:00", "%d %b %Y %H:%M:%S")
+    time = datetime.datetime.strptime("02 Mar 2022 13:00:00", "%d %b %Y %H:%M:%S")
     days_since = (datetime.datetime.now() - time).days
     time = days_since % len(daily_challenges)
 
