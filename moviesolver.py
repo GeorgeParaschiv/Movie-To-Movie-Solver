@@ -40,7 +40,7 @@ def get_daily_challenge():
         daily_challenges.append([start, end])
 
     # Calculating the challenge index based on days since the source date
-    time = datetime.datetime.strptime("02 Mar 2022 13:00:00", "%d %b %Y %H:%M:%S")
+    time = datetime.datetime.strptime("01 Nov 2022 10:00:00", "%d %b %Y %H:%M:%S")
     days_since = (datetime.datetime.now() - time).days
     time = days_since % len(daily_challenges)
 
