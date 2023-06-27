@@ -289,8 +289,8 @@ if (daily == 'D'):
     start_movie = (challenge[0]['id'], challenge[0]['title'], database.details(challenge[0]['id']).popularity)
     end_movie = (challenge[1]['id'], challenge[1]['title'], database.details(challenge[1]['id']).popularity)
 
-    s_start = re.sub(r"(?u)[^-\w.\s]", "", start_movie[1])
-    s_end = re.sub(r"(?u)[^-\w.\s]", "", end_movie[1])  
+    s_start = re.sub(r"(?u)[^-\w.,\s]", "", start_movie[1])
+    s_end = re.sub(r"(?u)[^-\w.,\s]", "", end_movie[1])  
 
     # Open the text file
     file = open((os.getcwd() + "\\Logs\\Daily Challenges\\" + s_start + " - " + s_end + ".txt"), 'w', encoding='utf-8')
