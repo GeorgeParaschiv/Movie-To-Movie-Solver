@@ -23,7 +23,7 @@ dne_counter = 0
 """ Get The Daily Challenge """
 def get_daily_challenge():
     # Grabbing the Daily Challenge from the Website
-    url = 'https://movietomovie.com/bundle.js'
+    url = 'https://movietomovie.com/_app/immutable/chunks/dailyChallenge.0d6443b0.js'
     response = requests.get(url)
 
     # Extract the movie information from the JavaScript code using regular expressions
