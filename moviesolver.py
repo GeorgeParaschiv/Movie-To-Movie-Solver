@@ -23,7 +23,7 @@ dne_counter = 0
 """ Get The Daily Challenge """
 def get_daily_challenge():
     # Grabbing the Daily Challenge from the Website
-    url = 'https://movietomovie.com/_app/immutable/chunks/dailyChallenge.0d6443b0.js'
+    url = 'https://movietomovie.com/_app/immutable/chunks/dailyChallenge.b4d2676b.js'
     response = requests.get(url)
 
     # Extract the movie information from the JavaScript code using regular expressions
@@ -70,6 +70,7 @@ def get_cast(movie_id):
     actors = movie.casts['cast']
     for actor in actors:
         cast.append((actor.id, actor.name, actor.popularity))
+    
     return cast
 
 # -----------------------------------------------------------------------   
