@@ -70,6 +70,7 @@ def get_cast(movie_id):
     actors = movie.casts['cast']
     for actor in actors:
         cast.append((actor.id, actor.name, actor.popularity))
+    
     return cast
 
 # -----------------------------------------------------------------------   
