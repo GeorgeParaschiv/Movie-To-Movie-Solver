@@ -324,14 +324,18 @@ if (end_movie_size < start_movie_size):
 else:
     reverse = False
 
-# Finding all chains of length 1
-solutions(start_movie, 1, file, reverse) 
+try:
+    # Finding all chains of length 1
+    solutions(start_movie, 1, file, reverse)
 
-# Finding all chains of length 2
-solutions(start_movie, 2, file, reverse)
+    # Finding all chains of length 2
+    solutions(start_movie, 2, file, reverse)
 
-# Close the file
-file.close() 
+    # Close the file
+    file.close() 
+except:
+    # Close the file
+    file.close() 
 
 print("\nThere were %i actors or movies that did not exist." %dne_counter)
 print("There %s %i connection failures." %("was" if fail_counter == 1 else "were", fail_counter))
